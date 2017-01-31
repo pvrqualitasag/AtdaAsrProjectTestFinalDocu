@@ -1,0 +1,176 @@
+---
+output:
+  pdf_document:
+    includes:
+      in_header: tex/header.tex
+    fig_caption: false
+  word_document: default
+---
+
+```{r DocumentSetup, echo=FALSE, results='hide', include=FALSE}
+### # specify knitr options
+knitr::opts_chunk$set(echo = FALSE, results = 'asis')
+```
+
+```{r ChunkHooks}
+knitr::knit_hooks$set(convert.odg = function(before, options, envir){
+  if (before){
+    
+  }
+})
+```
+
+```{r SectionEnumeratorSetup, results='hide'}
+### # initialize section counter
+robjSecEnum <- rqudocuhelper::SectionEnumerator$new()
+```
+
+```{r AbrTableSetup, results='hide'}
+### # init table of abbreviation
+r6ob_abbrtable <- rmddochelper::R6ClassTableAbbrev$new()
+r6ob_abbrtable$setColHeader(pvColHeader = c("Abkürzung","Bedeutung"))
+#r6ob_abbrtable$setQuote(pbQuote = FALSE)
+```
+
+```{r DocuStatusTableSetup, results='hide'}
+r6objDocStat <- rmddochelper::R6ClassDocuStatus$new()
+r6objDocStat$setStatusColnames(psStatusColnames = c("Version", "Datum", "Wer","Status", "Projekt"))
+```
+
+\begin{flushright}
+\includegraphics[width=0.7\linewidth]{png/QualitasLogo.png}
+\end{flushright}
+
+
+\fcolorbox{white}{white}{
+	\parbox[t]{1.0\linewidth}{
+		\centering \fontsize{12pt}{20pt}\selectfont % 
+		\vspace*{0.5cm} % 
+
+		\hfill Beschreibung Testphase
+
+		\vspace*{0.5cm} 
+	}
+}
+
+\vspace*{0.5cm}
+
+\fcolorbox{red}{white}{
+	\parbox[t]{1.0\linewidth}{
+		\centering \fontsize{25pt}{40pt}\selectfont %
+
+		\vspace*{1.5cm}
+    Automatisierter Tierdatenaustausch
+
+		\vspace*{1.5cm} % Space between the end of the title and the bottom of the grey box
+	}
+}
+
+\vspace*{1cm}
+
+\begin{center}
+\includegraphics[width=\textwidth]{png/WordCloud.png}
+\end{center}
+
+\vspace{5ex}
+{\centering \small
+\hfill
+\begin{tabular}{l}
+Peter von Rohr                      \\
+FB EDV, Qualitas AG                 \\
+Chamerstrasse 56, CH-6300 Zug       \\
+\verb+http://www.qualitasag.ch+     \\
+\verb+peter.vonrohr@qualitasag.ch+  
+\end{tabular}
+}
+
+\pagebreak
+
+\tableofcontents
+
+\pagebreak
+
+
+```{r DocuStatusTable}
+r6objDocStat$set_current_status(psVersion = "0.0.901",
+                                psStatus = "Erstellung",  
+                                psProject = "ATDA-ASR")
+r6objDocStat$set_current_status(psVersion = "0.0.902",
+                                psStatus = "Einleitung",  
+                                psProject = "ATDA-ASR")
+r6objDocStat$set_current_status(psVersion = "0.0.903",
+                                psStatus = "Beispiel Übertragung Milchmengendaten",  
+                                psProject = "ATDA-ASR")
+r6objDocStat$include_doc_stat(psTitle = "# Dokumentenstatus")
+```
+
+
+\pagebreak
+
+
+## Erklärung
+Dieses Dokument beschreibt die Testphase im Projekt `r r6ob_abbrtable$add_abbrev(psAbbrev = "ATDA-ASR", psMeaning = "Automatisierter Tierdatenaustausch der ASR")`. Die Testphase umfasst alle Punkte des Projektplans bis und mit dem erfolgreichen Tierdatenaustausch von einem Testbetrieb in der Schweiz bis in die `r r6ob_abbrtable$add_abbrev(psAbbrev = "ARGUS", psMeaning = "Datenbank der Zuchtorganisationen bei Qualitas")`.  
+
+
+## Einleitung
+Als primäres Ziel im Projektplan steht der Ersatz der manuellen Übertragung der Milchmengendaten durch eine automatisierte elektronische Übertragung. Die Testphase für das Projekt ist durch die erfolgreiche Übertragung der Milchmengendaten von einem Betrieb in der Schweiz bis zum Datenbanksystem ARGUS abgeschlossen. Durch diese Testphase konnte eine mögliche Umsetzung für die erfolgreiche Übertragung der Milchmengendaten gezeigt werden. Wie diese Umsetzung aussieht, soll im Folgenden beschrieben werden.
+
+
+## Umsetzung des Tierdatenaustauschs
+Die hier beschriebene Umsetzung des automatisierten Tierdatenaustauschs basiert zu einem wichtigen Teil auf der  Zusammenarbeit mit VSM. VSM ist ein holländische Informatikunternehmen, welches für verschiedenste Bereiche in der Nutztierhaltung Software entwickelt. Unter anderem hat VSM für alle wichtigen Melkanlagenanbieter Programme geschrieben, welche Daten aus den `r r6ob_abbrtable$add_abbrev(psAbbrev = "ISM", psMeaning = "Informationssystem der Melkanlage", psShowText = "Informationssystemen der Melkanlagen")` exportiert und an eine zentrale Datenbank übermittelt. Diese Programme werden als `PlugIns` bezeichnet. Aufgrund der Zusammenarbeit mit VSM war es uns möglich die von VSM entwickelten `Plug-Ins` für den Export der Daten ab ISM zu verwenden.
+
+
+## Testbetrieb
+Das von VSM zur Verfügung gestellte `PlugIn` für die Melkanlagen von Lely wurde per Remote-Zugriff auf einem Testbetrieb installiert (siehe nachfolgende Grafik). Während der Installation des `PlugIns` verbindet sich dieses mit dem Managment-System der Melkanlage. Im Fall von Lely wird dieses System mit `T4C` bezeichnet. Sobald das `PlugIn` von `T4C` erkannt wurde, konnte das `PlugIn` eine Verbindung zur zentralen Datenbank bei VSM aufnehmen und einen ersten Datenaustausch starten. Nach anfänglichen Bereinigungen von fehlenden Tiernummern (basierend auf Nummern der `r r6ob_abbrtable$add_abbrev(psAbbrev = "TVD", psMeaning = "Tierverkehrsdatenbank")`) konnte die routine-mässige Übertragung von Milchmengendaten gestartet werden.
+
+```{r InstallationTestbetrieb, out.width='0.6\\textwidth', fig.align='center'}
+#rmddochelper::insertOdgAsPdf(psOdgFileStem = "InstallationTestbetrieb")
+knitr::include_graphics(path = "InstallationTestbetrieb.pdf")
+```
+
+
+## Komponenten des Datenaustauschs
+Im Projektplan wurde der automatisierte Tierdatenaustausch in drei Komponenten unterteilt. 
+
+1. Export der Daten aus dem ISM
+2. Transfer der Daten zu ARGUS
+3. Import der Daten in die Datenbank
+
+In der hier beschriebenen Umsetzung des Datenaustauschs wird die Komponente `2. Transfer der Daten zu ARGUS` in zwei Schritte 2a und 2b unterteilt. 
+
+
+2. Transfer der Daten zu ARGUS
+    a. Das auf dem Testbetrieb installierte `PlugIn` von VSM übermittelt die Daten an die zentrale Datenbank bei VSM
+    b. Von dieser Datenbank werden die Daten per Webservice abgeholt und in ARGUS importiert.
+
+
+## Webservice zwischen VSM und ARGUS
+Der Webservice zwischen VSM und ARGUS basiert auf der sogenannten `r r6ob_abbrtable$add_abbrev(psAbbrev = "REST", psMeaning = "Representational State Transfer", pbOut = FALSE)` `REST`-Technologie. Ein REST-Webservice besteht aus einem Server und einem Client. Der Server läuft bei VSM und stellt gewisse Resourcen zur Verfügung. Diese werden durch einen definierten `r r6ob_abbrtable$add_abbrev(psAbbrev = "URL", psMeaning = "Unified Resource Locator")` eindeutig bestimmt. Ruft ein Client eine gewisse Resource auf, so erhält er als Antwort die durch die Resource definierte Datenmenge als Antwort zurück. 
+
+
+### Beispiel Milchmengen
+Die Übertragung der Milchmengendaten vom REST-Server bei VSM zum Datenbanksystem ARGUS machen wir aus ARGUS eine Anfrage an den URL `https://api-dev.agrobase.nl/dairy/api/EMM`. Jede Anfrage an den REST-Server bei VSM ist spezifisch für einen bestimmten Betrieb. Deshalb müssen wir der Anfrage die Betriebs-Id mitgeben. Zur Authorisierung müssen wir der Anfrage zusätzlich zur Betriebs-Id einen Authorisierungsschlüssel mitgeben. Der Server überprüft bei jeder Anfrage, ob der Authorisierungsschlüssel zur Abfrage von Informationen auf dem entsprechenden Betrieb berechtigt ist. Als optionale Parameter können wir der Abfrage auch ein Anfangs- und ein Enddatum mitgeben. Dann werden alle Daten vom entsprechenden Betrieb zwischen dem angegebenen Anfangs- und Enddatum übermittelt. Per default ist die Zeitspanne der zu übermittelnden Daten auf drei Tage vor dem aktuellen Übertragungsdatum eingestellt.
+
+Als Antwort bekommen wir alle Milchmengenrecords für den angegebenen Betrieb über die definierte Zeitspanne zurück. 
+
+
+### Anfrage an EMM-Resource
+Einzelne konkreten Anfragen an die EMM-Resource auf dem REST-Server von VSM können mit dem graphischen Tool `SoapUI` gemacht werden. 
+
+Zur Veranschaulichung einer konkreten Anfrage an die EMM-Resource auf dem REST-Server von VSM
+
+
+<!-- ------------------------------------------------------------------------------------ --
+  -- END of document:  Below this must not be anything, except the table of abbreviations --
+  -- ------------------------------------------------------------------------------------ --> 
+
+\pagebreak
+
+```{r WriteTableOfAbbreviations, results='hide'}
+if (!r6ob_abbrtable$is_empty_abbr())
+  r6ob_abbrtable$writeToTsvFile()
+```
+
+```{r AbrTableToDocument}
+r6ob_abbrtable$include_abbr_table(psAbbrTitle = "# Abkürzungen")
+```

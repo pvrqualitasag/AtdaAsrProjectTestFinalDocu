@@ -1,0 +1,116 @@
+---
+title: "Testing Hooks"
+author: "Peter von Rohr"
+date: "30 Januar 2017"
+output: pdf_document
+---
+
+# Three arguments in chunk hooks
+
+A chunk hook has three arguments: `before`, `options` and `envir`. We show how they work through some simple examples.
+
+## The `before` argument
+
+It is a logical argument: `before == TRUE` executes code before a chunk.
+
+```{r}
+library(knitr)
+knit_hooks$set(foo1 = function(before, options, envir) {
+  if (before) {
+    '_I appear before a chunk!_\n\n'
+  } else {
+    '\n\n_I am after a chunk..._'
+  }
+})
+```
+
+Test the `foo1` hook:
+
+```{r foo1='whatever'}
+1+1
+```
+
+## The `options` argument
+
+It contains all the chunk options (include global options) for the current chunk.
+
+```{r}
+knit_hooks$set(foo2 = function(before, options, envir) {
+  if (!before) {
+    z = capture.output(str(options[c('eval', 'dev', 'results', 'bar1', 'bar2', 'bar3','label')]))
+    z = paste('    ', z, sep = '', collapse = '\n')
+    paste('Some chunk options in the above chunk are:\n\n', z, sep = '')
+  }
+})
+```
+
+Test the `foo2` hook:
+
+```{r SpecialFooChunk, foo2='hi', bar1=TRUE, bar2='asdf', bar3=3.14159}
+1+1
+```
+
+## The `envir` argument
+
+It is the environment of the current chunk.
+
+```{r}
+knit_hooks$set(foo3 = function(before, options, envir) {
+  if (!before) {
+    paste('Objects available in the above chunk:',
+          paste('`', ls(envir), '`', sep = '', collapse = ', '))
+  }
+})
+```
+
+Test the `foo3` hook:
+
+```{r foo3=TRUE}
+x2=1+1; y3=rnorm(10)
+```
+
+Another example:
+
+```{r}
+knit_hooks$set(foo4 = function(before, options, envir) {
+  if (!before && exists('z5', envir = envir)) {
+    sprintf('**Ha! I see z5 = %.3f!**', envir$z5)
+  }
+})
+```
+
+Test `foo4`:
+
+```{r foo4='qwer'}
+pi
+```
+
+This above chunk is quiet because `z5` does not exist yet.
+
+```{r foo4='asdf'}
+z5=2*pi
+```
+
+
+## Own example
+We want to use chunk-hooks to convert graphics from a given format, like LibreOffice-Draw into pdf or png which can be included in documents. 
+
+```{r}
+knit_hooks$set(conv.odg = function(before, options, envir) {
+  if (is.null(options$label))
+    stop(" *** ERROR: chunk must be labelled\n")
+  if (is.null(options$odg.path)){
+    odg.path <- "odg"
+  } else {
+    odg.path <- options$odg.path
+  }
+  odg.fig.src  <- file.path(odg.path, paste(options$label, "odg", sep = "."))
+  trg.fig <- paste(options$label, "pdf", sep = ".")
+  if (before) {
+    if (!file.exists(odg.fig.src))
+      
+    rmddochelper:::convertLibOToGraphic()
+  }
+})
+```
+
