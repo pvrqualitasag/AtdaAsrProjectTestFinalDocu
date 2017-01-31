@@ -12,12 +12,8 @@ output:
 knitr::opts_chunk$set(echo = FALSE, results = 'asis')
 ```
 
-```{r ChunkHooks}
-knitr::knit_hooks$set(convert.odg = function(before, options, envir){
-  if (before){
-    
-  }
-})
+```{r ChunkHooks, results='hide'}
+knitr::knit_hooks$set(conv.odg = rmddochelper::odg.graphics.conv.hook)
 ```
 
 ```{r SectionEnumeratorSetup, results='hide'}
@@ -123,8 +119,7 @@ Die hier beschriebene Umsetzung des automatisierten Tierdatenaustauschs basiert 
 ## Testbetrieb
 Das von VSM zur Verfügung gestellte `PlugIn` für die Melkanlagen von Lely wurde per Remote-Zugriff auf einem Testbetrieb installiert (siehe nachfolgende Grafik). Während der Installation des `PlugIns` verbindet sich dieses mit dem Managment-System der Melkanlage. Im Fall von Lely wird dieses System mit `T4C` bezeichnet. Sobald das `PlugIn` von `T4C` erkannt wurde, konnte das `PlugIn` eine Verbindung zur zentralen Datenbank bei VSM aufnehmen und einen ersten Datenaustausch starten. Nach anfänglichen Bereinigungen von fehlenden Tiernummern (basierend auf Nummern der `r r6ob_abbrtable$add_abbrev(psAbbrev = "TVD", psMeaning = "Tierverkehrsdatenbank")`) konnte die routine-mässige Übertragung von Milchmengendaten gestartet werden.
 
-```{r InstallationTestbetrieb, out.width='0.6\\textwidth', fig.align='center'}
-#rmddochelper::insertOdgAsPdf(psOdgFileStem = "InstallationTestbetrieb")
+```{r InstallationTestbetrieb, conv.odg=TRUE, odg.graph.cache=TRUE, out.width='0.6\\textwidth', fig.align='center'}
 knitr::include_graphics(path = "InstallationTestbetrieb.pdf")
 ```
 
@@ -149,16 +144,37 @@ Der Webservice zwischen VSM und ARGUS basiert auf der sogenannten `r r6ob_abbrta
 
 
 ### Beispiel Milchmengen
-Die Übertragung der Milchmengendaten vom REST-Server bei VSM zum Datenbanksystem ARGUS machen wir aus ARGUS eine Anfrage an den URL `https://api-dev.agrobase.nl/dairy/api/EMM`. Jede Anfrage an den REST-Server bei VSM ist spezifisch für einen bestimmten Betrieb. Deshalb müssen wir der Anfrage die Betriebs-Id mitgeben. Zur Authorisierung müssen wir der Anfrage zusätzlich zur Betriebs-Id einen Authorisierungsschlüssel mitgeben. Der Server überprüft bei jeder Anfrage, ob der Authorisierungsschlüssel zur Abfrage von Informationen auf dem entsprechenden Betrieb berechtigt ist. Als optionale Parameter können wir der Abfrage auch ein Anfangs- und ein Enddatum mitgeben. Dann werden alle Daten vom entsprechenden Betrieb zwischen dem angegebenen Anfangs- und Enddatum übermittelt. Per default ist die Zeitspanne der zu übermittelnden Daten auf drei Tage vor dem aktuellen Übertragungsdatum eingestellt.
+Die Milchmengendaten vom REST-Server bei VSM werden zum Datenbanksystem ARGUS per Anfrage an den URL `https://api-dev.agrobase.nl/dairy/api/EMM` übertragen. Jede Anfrage an den REST-Server bei VSM ist spezifisch für einen bestimmten Betrieb. Deshalb müssen wir der Anfrage die Betriebs-Id mitgeben. Zur Authorisierung müssen wir der Anfrage zusätzlich zur Betriebs-Id einen Authorisierungsschlüssel mitgeben. Der Server überprüft bei jeder Anfrage, ob der Authorisierungsschlüssel zur Abfrage von Informationen auf dem entsprechenden Betrieb berechtigt ist. Als optionale Parameter können auch das Anfangs- und das Enddatum mitgegeben werden. Dann werden alle Daten vom entsprechenden Betrieb zwischen dem entsprechenden Anfangs- und Enddatum übermittelt. Per default ist das Enddatum auf das aktuelle Datum und das Anfangsdatum auf drei Tage vor dem aktuellen Datum eingestellt.
 
 Als Antwort bekommen wir alle Milchmengenrecords für den angegebenen Betrieb über die definierte Zeitspanne zurück. 
 
 
 ### Anfrage an EMM-Resource
-Einzelne konkreten Anfragen an die EMM-Resource auf dem REST-Server von VSM können mit dem graphischen Tool `SoapUI` gemacht werden. 
+Einzelne konkrete Anfragen an die EMM-Resource auf dem REST-Server von VSM können mit dem graphischen Tool `SoapUI` gemacht werden. Diese Art der Erstellung einer Anfrage dient einzig der Veranschaulichung der Funktionsweise der Datenübertragung. Für den Routinebetrieb wird die hier manuell erstellte Anfrage an die Resource automatisch mit einem Programm auf der Datenbank erstellt.
 
-Zur Veranschaulichung einer konkreten Anfrage an die EMM-Resource auf dem REST-Server von VSM
+Der folgende Screenshot zeigt eine Anfrage an die Login-Resource des REST-Servers. Als Input verlangt die Login-Resource den Benutzernamen und das Passwort (siehe Pfeil 1). Als Anwort (siehe Pfeil 2) liefert der Server einen Record im sogenannten `r r6ob_abbrtable$add_abbrev(psAbbrev = "JSON", psMeaning = "Java-Script Object Notation")` Format zurück. In der Antwort ist der Authorisierungsschlüssel enthalten, welchen wir für alle folgenden Anfragen verwenden werden.
 
+```{r LoginResource, conv.odg=TRUE, odg.graph.cache=TRUE, fig.align='center'}
+knitr::include_graphics(path = "LoginResource.pdf")
+```
+
+Zur Übertragung der Milchmengendaten müssen wir eine Anfrage an die EMM-Resource erstellen. Als Input für die EMM-Anfrage übergeben wir einen JSON-Record mit dem Authorisierungsschlüssel (1), dem Benutzernamen (2), der BetriebsId (3), dem Start- (4) und dem Enddatum (5). Ein Beispiel für eine EMM-Anfrage ist im nachfolgenden Screenshot gezeigt.
+
+```{r EmmResource, conv.odg=TRUE, odg.graph.cache=TRUE, fig.align='center'}
+knitr::include_graphics(path = "EmmResource.pdf")
+```
+
+Die oben gezeigte EMM-Anfrage fordert die Übertragung aller Milchmengendaten für den Betrieb mit der Id `"CH360830"` für die Zeitspanne zwischen dem 01.01.2017 und dem 30.01.2017 an. 
+
+
+### Resultat der EMM-Anfrage
+Als Resultat erhalten wir dann einen ganzen Array von JSON-Records. Ein Ausschnitt der übermittelten Daten ist im folgenden Screenshot gezeigt.
+
+```{r EmmDataResult, conv.odg=TRUE, odg.graph.cache=TRUE, fig.align='center'}
+knitr::include_graphics(path = "EmmDataResult.pdf")
+```
+
+Ein einzelner JSON-Record besteht aus den Datenkomponenten zwischen zwei geschweiften Klammern `{}`. Jeder einzelne JSON-Record repräsentiert einen Besuch einer Kuh im Roboter. Die Kuh wird mit der `"LifeNumber"`, welche der TVD-Nummer entspricht, identifiziert. Die Besuchsdauer der entsprechenden Kuh kann über die Zeitdifferenz zwischen `"EndMilking"` und `"StartMilking` bestimmt werden. Die letzte Datenkomponente in einem JSON-Record beinhaltet die Milchmenge.
 
 <!-- ------------------------------------------------------------------------------------ --
   -- END of document:  Below this must not be anything, except the table of abbreviations --
@@ -174,3 +190,9 @@ if (!r6ob_abbrtable$is_empty_abbr())
 ```{r AbrTableToDocument}
 r6ob_abbrtable$include_abbr_table(psAbbrTitle = "# Abkürzungen")
 ```
+
+
+
+
+
+
