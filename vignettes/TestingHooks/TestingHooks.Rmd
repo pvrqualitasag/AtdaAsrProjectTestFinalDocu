@@ -95,7 +95,7 @@ z5=2*pi
 ## Own example
 We want to use chunk-hooks to convert graphics from a given format, like LibreOffice-Draw into pdf or png which can be included in documents. 
 
-```{r}
+```{r, results='hide'}
 knit_hooks$set(conv.odg = function(before, options, envir) {
   if (is.null(options$label))
     stop(" *** ERROR: chunk must be labelled\n")
@@ -104,13 +104,28 @@ knit_hooks$set(conv.odg = function(before, options, envir) {
   } else {
     odg.path <- options$odg.path
   }
-  odg.fig.src  <- file.path(odg.path, paste(options$label, "odg", sep = "."))
+  odg.fname <- paste(options$label, "odg", sep = ".")
+  odg.fig.src  <- file.path(odg.path, odg.fname)
   trg.fig <- paste(options$label, "pdf", sep = ".")
   if (before) {
     if (!file.exists(odg.fig.src))
-      
-    rmddochelper:::convertLibOToGraphic()
+      rmddochelper::create_odg_graphic(psGraphicName = odg.fname, psGraphicPath = odg.path)
+    if (!file.exists(trg.fig) | !options$odg.graph.cache)
+      rmddochelper:::convertLibOToGraphic(psLibOFile = odg.fname, psOutFormat = "pdf", psLibODir = odg.path)
   }
 })
+```
+
+Now we create a chunk that includes a figure
+
+```{r FigInclude, conv.odg=TRUE, odg.path="odg", odg.graph.cache=FALSE}
+knitr::include_graphics(path = "FigInclude.pdf")
+```
+
+This is the first line after the figure inclusion.
+
+```{r}
+Sys.time()
+sessionInfo()
 ```
 
