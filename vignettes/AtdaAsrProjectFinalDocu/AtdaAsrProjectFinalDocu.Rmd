@@ -97,6 +97,18 @@ r6objDocStat$set_current_status(psVersion = "0.0.902",
 r6objDocStat$set_current_status(psVersion = "0.0.903",
                                 psStatus = "Beispiel Übertragung Milchmengendaten",  
                                 psProject = "ATDA-ASR")
+r6objDocStat$set_current_status(psVersion = "0.0.904",
+                                psStatus = "Anfragen mit SoapUI",  
+                                psProject = "ATDA-ASR")
+r6objDocStat$set_current_status(psVersion = "0.0.905",
+                                psStatus = "Verarbeitung der Daten",  
+                                psProject = "ATDA-ASR")
+r6objDocStat$set_current_status(psVersion = "0.0.906",
+                                psStatus = "Erster Entwurf",  
+                                psProject = "ATDA-ASR")
+r6objDocStat$set_current_status(psVersion = "0.0.907",
+                                psStatus = "Ergänzung der Tagesmilchberechnung",  
+                                psProject = "ATDA-ASR")
 r6objDocStat$include_doc_stat(psTitle = "# Dokumentenstatus")
 ```
 
@@ -109,15 +121,15 @@ Dieses Dokument beschreibt die Testphase im Projekt `r r6ob_abbrtable$add_abbrev
 
 
 ## Einleitung
-Als primäres Ziel im Projektplan steht der Ersatz der manuellen Übertragung der Milchmengendaten durch eine automatisierte elektronische Übertragung. Die Testphase für das Projekt ist durch die erfolgreiche Übertragung der Milchmengendaten von einem Betrieb in der Schweiz bis zum Datenbanksystem ARGUS abgeschlossen. Durch diese Testphase konnte eine mögliche Umsetzung für die erfolgreiche Übertragung der Milchmengendaten gezeigt werden. Wie diese Umsetzung aussieht, soll im Folgenden beschrieben werden.
+Als primäres Ziel im Projektplan steht der Ersatz der manuellen Übertragung der Milchmengendaten durch eine automatisierte elektronische Übertragung. Die Testphase für das Projekt ist durch die erfolgreiche Übertragung der Milchmengendaten von einem Betrieb in der Schweiz bis zum Datenbanksystem ARGUS abgeschlossen. Durch diese Testphase konnte eine mögliche Umsetzung für die erfolgreiche Übertragung der Milchmengendaten gezeigt werden. Wie diese Umsetzung aussieht, soll in den folgenden Abschnitten beschrieben werden.
 
 
 ## Umsetzung des Tierdatenaustauschs
-Die hier beschriebene Umsetzung des automatisierten Tierdatenaustauschs basiert zu einem wichtigen Teil auf der  Zusammenarbeit mit VSM. VSM ist ein holländische Informatikunternehmen, welches für verschiedenste Bereiche in der Nutztierhaltung Software entwickelt. Unter anderem hat VSM für alle wichtigen Melkanlagenanbieter Programme geschrieben, welche Daten aus den `r r6ob_abbrtable$add_abbrev(psAbbrev = "ISM", psMeaning = "Informationssystem der Melkanlage", psShowText = "Informationssystemen der Melkanlagen")` exportiert und an eine zentrale Datenbank übermittelt. Diese Programme werden als `PlugIns` bezeichnet. Aufgrund der Zusammenarbeit mit VSM war es uns möglich die von VSM entwickelten `Plug-Ins` für den Export der Daten ab ISM zu verwenden.
+Die hier beschriebene Umsetzung des automatisierten Tierdatenaustauschs basiert zu einem wichtigen Teil auf der  Zusammenarbeit mit VSM. VSM ist ein holländische Informatikunternehmen, welches für verschiedenste Bereiche in der Nutztierhaltung Software entwickelt. Unter anderem hat VSM für alle wichtigen Melkanlagenanbieter Programme geschrieben, welche Daten aus den `r r6ob_abbrtable$add_abbrev(psAbbrev = "ISM", psMeaning = "Informationssystem der Melkanlage", psShowText = "Informationssystemen der Melkanlagen")` exportieren und an eine zentrale Datenbank übermitteln. Diese Programme werden als `PlugIns` bezeichnet. Aufgrund der Zusammenarbeit mit VSM war es uns möglich diese `Plug-Ins` für den Datenexport ab den ISM zu verwenden.
 
 
 ## Testbetrieb
-Das von VSM zur Verfügung gestellte `PlugIn` für die Melkanlagen von Lely wurde per Remote-Zugriff auf einem Testbetrieb installiert (siehe nachfolgende Grafik). Während der Installation des `PlugIns` verbindet sich dieses mit dem Managment-System der Melkanlage. Im Fall von Lely wird dieses System mit `T4C` bezeichnet. Sobald das `PlugIn` von `T4C` erkannt wurde, konnte das `PlugIn` eine Verbindung zur zentralen Datenbank bei VSM aufnehmen und einen ersten Datenaustausch starten. Nach anfänglichen Bereinigungen von fehlenden Tiernummern (basierend auf Nummern der `r r6ob_abbrtable$add_abbrev(psAbbrev = "TVD", psMeaning = "Tierverkehrsdatenbank")`) konnte die routine-mässige Übertragung von Milchmengendaten gestartet werden.
+Das von VSM zur Verfügung gestellte `PlugIn` für die Melkanlagen von Lely wurde per Remote-Zugriff auf einem Testbetrieb in der Schweiz installiert (siehe nachfolgende Grafik). Während der Installation des `PlugIns` verbindet sich dieses mit dem Management-System der Melkanlage. Im Fall von Lely wird dieses System mit `T4C` bezeichnet. Sobald das `PlugIn` von `T4C` erkannt wurde, konnte das `PlugIn` eine Verbindung zur zentralen Datenbank bei VSM aufnehmen und einen ersten Datenaustausch starten. Nach anfänglichen Bereinigungen von fehlenden Tiernummern (basierend auf Nummern der `r r6ob_abbrtable$add_abbrev(psAbbrev = "TVD", psMeaning = "Tierverkehrsdatenbank")`) konnte die routine-mässige Übertragung von Milchmengendaten gestartet werden.
 
 ```{r InstallationTestbetrieb, conv.odg=TRUE, odg.graph.cache=TRUE, out.width='0.6\\textwidth', fig.align='center'}
 knitr::include_graphics(path = "InstallationTestbetrieb.pdf")
@@ -140,25 +152,25 @@ In der hier beschriebenen Umsetzung des Datenaustauschs wird die Komponente `2. 
 
 
 ## Webservice zwischen VSM und ARGUS
-Der Webservice zwischen VSM und ARGUS basiert auf der sogenannten `r r6ob_abbrtable$add_abbrev(psAbbrev = "REST", psMeaning = "Representational State Transfer", pbOut = FALSE)` `REST`-Technologie. Ein REST-Webservice besteht aus einem Server und einem Client. Der Server läuft bei VSM und stellt gewisse Resourcen zur Verfügung. Diese werden durch einen definierten `r r6ob_abbrtable$add_abbrev(psAbbrev = "URL", psMeaning = "Unified Resource Locator")` eindeutig bestimmt. Ruft ein Client eine gewisse Resource auf, so erhält er als Antwort die durch die Resource definierte Datenmenge als Antwort zurück. 
+Der Webservice zwischen VSM und ARGUS basiert auf der sogenannten `r r6ob_abbrtable$add_abbrev(psAbbrev = "REST", psMeaning = "Representational State Transfer", pbOut = FALSE)` `REST`-Technologie. Ein REST-Webservice besteht aus einem Server und einem Client. Der Server läuft bei VSM und stellt gewisse Ressourcen zur Verfügung. Diese werden durch einen definierten `r r6ob_abbrtable$add_abbrev(psAbbrev = "URL", psMeaning = "Unified Resource Locator")` eindeutig bestimmt. Ruft ein Client eine gewisse Ressource auf, so erhält er als Antwort die durch die Ressource definierte Datenmenge als Antwort zurück. 
 
 
 ### Beispiel Milchmengen
-Die Milchmengendaten vom REST-Server bei VSM werden zum Datenbanksystem ARGUS per Anfrage an den URL `https://api-dev.agrobase.nl/dairy/api/EMM` übertragen. Jede Anfrage an den REST-Server bei VSM ist spezifisch für einen bestimmten Betrieb. Deshalb müssen wir der Anfrage die Betriebs-Id mitgeben. Zur Authorisierung müssen wir der Anfrage zusätzlich zur Betriebs-Id einen Authorisierungsschlüssel mitgeben. Der Server überprüft bei jeder Anfrage, ob der Authorisierungsschlüssel zur Abfrage von Informationen auf dem entsprechenden Betrieb berechtigt ist. Als optionale Parameter können auch das Anfangs- und das Enddatum mitgegeben werden. Dann werden alle Daten vom entsprechenden Betrieb zwischen dem entsprechenden Anfangs- und Enddatum übermittelt. Per default ist das Enddatum auf das aktuelle Datum und das Anfangsdatum auf drei Tage vor dem aktuellen Datum eingestellt.
+Die Milchmengendaten vom REST-Server bei VSM werden zum Datenbanksystem ARGUS per Anfrage an den URL `https://api-dev.agrobase.nl/dairy/api/EMM` übertragen. Jede Anfrage an den REST-Server bei VSM ist spezifisch für einen bestimmten Betrieb. Deshalb müssen wir der Anfrage die Betriebs-Id mitgeben. Zur Autorisierung müssen wir der Anfrage zusätzlich zur Betriebs-Id einen Authentifizierungsschlüssel mitgeben. Der Server überprüft bei jeder Anfrage, ob der Authentifizierungsschlüssel zur Abfrage von Informationen auf dem entsprechenden Betrieb berechtigt ist. Als optionale Parameter können ein Anfangs- und ein Enddatum mitgegeben werden. Werden bei der Anfrage ein Anfangs- und ein Enddatum mitgeliefert, dann definieren diese eine bestimmte Zeitperiode. Das Resultat auf eine solche Anfrage enthält alle Milchmengendaten, welche in die definierte Zeitperiode fallen. Bei allen Anfragen ohne Anfangs- und Enddatum ist per default das Enddatum auf das aktuelle Datum und das Anfangsdatum auf drei Tage vor dem aktuellen Datum eingestellt.
 
-Als Antwort bekommen wir alle Milchmengenrecords für den angegebenen Betrieb über die definierte Zeitspanne zurück. 
+Als Antwort bekommen wir alle Milchmengenrecords für den angegebenen Betrieb über die definierte Zeitperiode zurück. 
 
 
 ### Anfrage an EMM-Resource
-Einzelne konkrete Anfragen an die EMM-Resource auf dem REST-Server von VSM können mit dem graphischen Tool `SoapUI` gemacht werden. Diese Art der Erstellung einer Anfrage dient einzig der Veranschaulichung der Funktionsweise der Datenübertragung. Für den Routinebetrieb wird die hier manuell erstellte Anfrage an die Resource automatisch mit einem Programm auf der Datenbank erstellt.
+Einzelne konkrete Anfragen an die EMM-Ressource auf dem REST-Server von VSM können mit dem graphischen Tool `SoapUI` gemacht werden. Diese Art der Erstellung einer Anfrage wird nur für Testzwecke verwendet und dient einzig der Veranschaulichung der Funktionsweise der Datenübertragung. Für den Routinebetrieb wird die hier manuell erstellte Anfrage an die Ressource automatisch mit einem Programm auf der Datenbank erstellt.
 
-Der folgende Screenshot zeigt eine Anfrage an die Login-Resource des REST-Servers. Als Input verlangt die Login-Resource den Benutzernamen und das Passwort (siehe Pfeil 1). Als Anwort (siehe Pfeil 2) liefert der Server einen Record im sogenannten `r r6ob_abbrtable$add_abbrev(psAbbrev = "JSON", psMeaning = "Java-Script Object Notation")` Format zurück. In der Antwort ist der Authorisierungsschlüssel enthalten, welchen wir für alle folgenden Anfragen verwenden werden.
+Der folgende Screenshot zeigt eine Anfrage an die Login-Ressource des REST-Servers. Als Input verlangt die Login-Ressource den Benutzernamen und das Passwort (siehe Pfeil 1). Als Antwort (siehe Pfeil 2) liefert der Server einen Record im sogenannten `r r6ob_abbrtable$add_abbrev(psAbbrev = "JSON", psMeaning = "Java-Script Object Notation")` Format zurück. In der Antwort ist der Authentifizierungsschlüssel enthalten, welchen wir für alle folgenden Anfragen verwenden werden.
 
 ```{r LoginResource, conv.odg=TRUE, odg.graph.cache=TRUE, fig.align='center'}
 knitr::include_graphics(path = "LoginResource.pdf")
 ```
 
-Zur Übertragung der Milchmengendaten müssen wir eine Anfrage an die EMM-Resource erstellen. Als Input für die EMM-Anfrage übergeben wir einen JSON-Record mit dem Authorisierungsschlüssel (1), dem Benutzernamen (2), der BetriebsId (3), dem Start- (4) und dem Enddatum (5). Ein Beispiel für eine EMM-Anfrage ist im nachfolgenden Screenshot gezeigt.
+Zur Übertragung der Milchmengendaten müssen wir eine Anfrage an die EMM-Ressource erstellen. Als Input für die EMM-Anfrage übergeben wir einen JSON-Record mit dem  (1), dem Benutzernamen (2), der BetriebsId (3), dem Start- (4) und dem Enddatum (5). Ein Beispiel für eine EMM-Anfrage ist im nachfolgenden Screenshot gezeigt.
 
 ```{r EmmResource, conv.odg=TRUE, odg.graph.cache=TRUE, fig.align='center'}
 knitr::include_graphics(path = "EmmResource.pdf")
@@ -176,6 +188,44 @@ knitr::include_graphics(path = "EmmDataResult.pdf")
 
 Ein einzelner JSON-Record besteht aus den Datenkomponenten zwischen zwei geschweiften Klammern `{}`. Jeder einzelne JSON-Record repräsentiert einen Besuch einer Kuh im Roboter. Die Kuh wird mit der `"LifeNumber"`, welche der TVD-Nummer entspricht, identifiziert. Die Besuchsdauer der entsprechenden Kuh kann über die Zeitdifferenz zwischen `"EndMilking"` und `"StartMilking` bestimmt werden. Die letzte Datenkomponente in einem JSON-Record beinhaltet die Milchmenge.
 
+
+## Routinemässige Datenübertragung
+Wie schon im vorherigen Abschnitt erwähnt ist die gezeigte Übertragungsart via SoapUI nicht für den routinemässigen Einsatz geeignet. Die routinemässe Datenübertragung umfasst nicht nur einen Betrieb sondern muss die Übertragung der Daten von vielen Betrieben sicherstellen. Deshalb kommt nur eine vollautomatische Umsetzung der Datenübertragung und der anschliessenden Verarbeitung in Frage.
+
+
+### Prozess der Datenübertragung
+Auf dem Datenbanksystem ARGUS läuft täglich ein Batch-Job, welcher die Datenübertragung für die entsprechenden Betriebe startet. Von welchem Betrieb an einem gewissen Datum Daten übertragen werden, wird aufgrund der Tabelle `T_ATDA_TRDATE` entschieden. In dieser Tabelle ist für jeden Betrieb abgelegt, an welchem Datum die nächste Datenübertragung geplant ist. Für einen einzelnen Betrieb können Daten in verschiedenen Intervallen abgefragt werden. Wie häufig eine Datenabfrage für den gleichen Betrieb gemacht werden soll, muss getestet werden und ist unter Umständen von der Anzahl Betriebe abhängig, welche im Prozess der automatisierten Datenübertragung beteiligt sind.
+
+
+### Ablaufplanung der Datenübertragung
+Wird ein neuer Betrieb in den Prozess der automatisierten Datenübertragung aufgenommen, so wird als erstes das zum Hersteller der Melkanlage passende PlugIn auf dem ISM installiert. Auf ARGUS wird der Betrieb mit dem Datum der ersten geplanten Datenübertragung in die Tabelle `T_ATDA_TRDATE` eingetragen. 
+
+Für eine allfällige Bereinigung der Tieridentifikation wird die Liste aller weiblichen Tiere, welche den aktuellen Standort auf dem neuen Betrieb haben, an VSM übermittelt. Bei VSM werden dann die Tier-Ids, welche vom Roboter übermittelt werden mit den Werten aus ARGUS verglichen.
+
+Sobald alle Tier-Ids bereinigt sind, kann die automatisierte Datenübertragung gemäss dem geplanten Datum in `T_ATDA_TRDATE` gestartet werden. Nach jeder erfolgreichen Datenübertragung wird der Zeitpunkt für die nächste geplante Übertragung in die Tabelle `T_ATDA_TRDATE` eingetragen.
+
+
+## Verarbeitung der übertragenen Daten
+Analog zu anderen Datenimportprozessen werden auch die von VSM erhaltenen Daten in einem zwei-schritt Verfahren importiert. Im einem ersten Schritt werden die Rohdaten, wie sie von VSM her kommen in eine Importtabelle abgelegt. Für die Milchmengendaten heisst diese Tabelle `TI_ATDA_EMM`. Dort werden die übertragenen Daten mit der entsprechenden Betriebsnummer abgelegt. Einige Beispiele für übertragene Datenrecords, wie sie in der Importtabelle `TI_ATDA_EMM` abgelegt werden, sind im folgenden Screenshot gezeigt.
+
+```{r EmmImport, conv.odg=TRUE, odg.graph.cache=TRUE, fig.align='center'}
+knitr::include_graphics(path = "EmmImport.pdf")
+```
+
+
+In einem zweiten Schritt werden die übertragenen Daten verarbeitet. Für die Milchmengendaten können wir die Milchmengen der einzelnen Besuche für jeden Tag aufaddieren und erhalten so für jede Kuh die Tagesmilchmenge. Zu Testzwecken sind die berechneten Tagesmilchmengen in der Tabelle `T_ATDA_TMM` abgelegt. Ein Ausschnitt aus dieser Tabelle ist im folgenden Screenshot gezeigt.
+
+```{r AtdaTmm, conv.odg=TRUE, odg.graph.cache=TRUE, fig.align='center'}
+knitr::include_graphics(path = "AtdaTmm.pdf")
+```
+
+
+
+Als repräsentativen Wert der Milchmenge pro Kuh für einen Monat können wir den Durchschnitt über alle Tagesmilchmengen errechnen. 
+
+
+
+
 <!-- ------------------------------------------------------------------------------------ --
   -- END of document:  Below this must not be anything, except the table of abbreviations --
   -- ------------------------------------------------------------------------------------ --> 
@@ -190,6 +240,8 @@ if (!r6ob_abbrtable$is_empty_abbr())
 ```{r AbrTableToDocument}
 r6ob_abbrtable$include_abbr_table(psAbbrTitle = "# Abkürzungen")
 ```
+
+
 
 
 
