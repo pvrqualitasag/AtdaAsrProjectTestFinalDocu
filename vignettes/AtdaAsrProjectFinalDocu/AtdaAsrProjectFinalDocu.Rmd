@@ -109,6 +109,9 @@ r6objDocStat$set_current_status(psVersion = "0.0.906",
 r6objDocStat$set_current_status(psVersion = "0.0.907",
                                 psStatus = "Ergänzung der Tagesmilchberechnung",  
                                 psProject = "ATDA-ASR")
+r6objDocStat$set_current_status(psVersion = "0.0.908",
+                                psStatus = "Vergleich Tagesmilch mit Milchwägung",  
+                                psProject = "ATDA-ASR")
 r6objDocStat$include_doc_stat(psTitle = "# Dokumentenstatus")
 ```
 
@@ -220,11 +223,14 @@ knitr::include_graphics(path = "AtdaTmm.pdf")
 ```
 
 
-
 Als repräsentativen Wert der Milchmenge pro Kuh für einen Monat können wir den Durchschnitt über alle Tagesmilchmengen errechnen. 
 
 
+## Vergleich der übertragenen Daten mit Milchwägungen
+Seit der Installation der Plug-Ins sind gut zwei Monate vergangen. Somit haben wir Tagesmilchmengen von zwei Monaten und zwei konventionelle Milchwägungen zur Verfügung, damit wir einen Vergleich anstellen können.
 
+### Übertragung der Milchmengendaten
+In einem ersten Schritt werden die Milchmengendaten für die Monate Januar und Februar 2017 übertragen und verarbeitet. 
 
 <!-- ------------------------------------------------------------------------------------ --
   -- END of document:  Below this must not be anything, except the table of abbreviations --
