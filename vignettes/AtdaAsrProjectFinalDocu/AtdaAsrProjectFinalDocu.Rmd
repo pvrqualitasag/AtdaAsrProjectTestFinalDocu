@@ -230,7 +230,137 @@ Als repräsentativen Wert der Milchmenge pro Kuh für einen Monat können wir de
 Seit der Installation der Plug-Ins sind gut zwei Monate vergangen. Somit haben wir Tagesmilchmengen von zwei Monaten und zwei konventionelle Milchwägungen zur Verfügung, damit wir einen Vergleich anstellen können.
 
 ### Übertragung der Milchmengendaten
-In einem ersten Schritt werden die Milchmengendaten für die Monate Januar und Februar 2017 übertragen und verarbeitet. 
+In einem ersten Schritt werden die Milchmengendaten für die Monate Januar und Februar 2017 übertragen und verarbeitet. Aufgrund der übertragenen Rohdaten wurden für jede Kuh die Tagesmilchmenge berechnet. Die berechneten Tagesmilchmengen werden als Boxplots dargestellt.
+
+
+```{r DataTransfer, echo=FALSE, results='hide'}
+sAtdaTmmRda <- "atda_tmm.rda"
+if (!file.exists(sAtdaTmmRda)){
+  stop(" * ATDA TMM data not found, read it from database first\n")
+} else {
+  cat(" * Load data from file ...\n")
+  load(file = sAtdaTmmRda)
+}
+### # get dimensions of data to check
+dim(dfResult)
+
+### # extract all cows from dataframe
+suppressPackageStartupMessages(require(dplyr))
+tdfResult <- tbl_df(dfResult)
+tdfTvdNrCow <- distinct(tdfResult, ATMM_KUH_LIFENR)
+
+### # add month to the data frame
+tdfResult <- mutate(tdfResult, ATMM_REC_MONTH = substr(ATMM_REC_DATUM,6,7))
+
+### # function to get TMM per month
+tdfGetTmmPerMonth <- function(ptdfResult, psMonth, ptdfTvdNr){
+  tdfTmmPerMonth <- filter(ptdfResult, ATMM_REC_MONTH == psMonth)
+  ATMM_KUH_IDX <- sapply(tdfTmmPerMonth$ATMM_KUH_LIFENR, 
+                         function(x) which(x == ptdfTvdNr$ATMM_KUH_LIFENR), 
+                         USE.NAMES = FALSE)
+  tdfTmmPerMonth <- cbind(tdfTmmPerMonth, ATMM_KUH_IDX)
+  return(tdfTmmPerMonth)
+}
+### # extract data for Month 01
+sMonthNr <- "01"
+tdfResult01 <- tdfGetTmmPerMonth(ptdfResult = tdfResult,
+                                 psMonth    = sMonthNr,
+                                 ptdfTvdNr  = tdfTvdNrCow)
+
+### # control milk yield
+sControlMilkYieldRda <- paste0("con_my_2017",sMonthNr, ".rda")
+if (!file.exists(sControlMilkYieldRda)){
+  stop(" * No control milk yield data found, read it from DB first\n")
+} else {
+  load(file = sControlMilkYieldRda)
+}
+### # produce a vector with TVD-Nr w/out Pz and remove spaces and '.'
+vecShortLifeNr <- gsub(" ", "", tdfTvdNrCow$ATMM_KUH_LIFENR, fixed = TRUE)
+vecShortLifeNr <- gsub(".", "", vecShortLifeNr, fixed = TRUE)
+vecLifeNrTvdNrMap <- sapply(vecShortLifeNr, 
+                            function(x) charmatch(x, dfControlMilkYield201701$TVDNR), 
+                            USE.NAMES = FALSE)
+
+vecTvdNrLifeNrMap <- sapply(dfControlMilkYield201701$TVDNR,
+                            function(x) charmatch(substr(x,1,nchar(x)-1), vecShortLifeNr),
+                            USE.NAMES = FALSE)
+### # report which cows have milk yield but not TMM data
+vecNoTmm <- dfControlMilkYield201701$TVDNR[which(is.na(vecTvdNrLifeNrMap))]
+### # bind LifeNrIdx
+dfControlMilkYield201701 <- cbind(dfControlMilkYield201701, vecTvdNrLifeNrMap)
+
+### # compute number of total milk yield
+tdfControlMilkYield <- tbl_df(dfControlMilkYield201701)
+tdfControlMilkYield <- mutate(tdfControlMilkYield, 
+                              PESKGLAITTOTAL = PESKGLAITMATIN + PESKGLAITSOIR)
+
+tdfControlMilkYield <- filter(tdfControlMilkYield, !is.na(vecTvdNrLifeNrMap))
+
+```
+
+In der nachfolgenden Grafik werden die TVD-Nummern der Kühe durch fortlaufende Nummern ersetzt. Die folgende Tabelle gibt die Zuordnung zwischen Kuh-Nummern und TVD-Nummern der Kühe.
+
+```{r CowNumberTable, echo=FALSE, results='asis'}
+nNrRowsPerPage <- 37
+nNrRounds <- floor(nrow(tdfTvdNrCow)/nNrRowsPerPage)
+lstCowNr <- NULL
+for (i in 1:nNrRounds){
+  lstCurNr <- list(Knr = as.character(c(((i-1)*nNrRowsPerPage + 1):(i*nNrRowsPerPage))),
+                   Tnr = as.vector(unlist(tdfTvdNrCow))[((i-1)*nNrRowsPerPage + 1):(i*nNrRowsPerPage)])
+  names(lstCurNr) <- sapply(c("Kuhnummer","TVDNummer"), function(x) paste0(x,i))
+  if (is.null(lstCowNr)){
+    lstCowNr <- lstCurNr
+  } else {
+    lstCowNr <- c(lstCowNr, lstCurNr)
+  }
+}
+### # add remainder
+if (i*nNrRowsPerPage < nrow(tdfTvdNrCow)){
+  vecEmptyRows <- rep("", (nNrRowsPerPage-nrow(tdfTvdNrCow)+i*nNrRowsPerPage))
+  lstCurNr <- list(Knr = c(as.character(c((i*nNrRowsPerPage + 1):(nrow(tdfTvdNrCow)))),vecEmptyRows),
+                   Tnr = c(as.vector(unlist(tdfTvdNrCow))[(i*nNrRowsPerPage + 1):(nrow(tdfTvdNrCow))],vecEmptyRows))
+  names(lstCurNr) <- sapply(c("Kuhnummer","TVDNummer"), function(x) paste0(x,(i+1)))
+  lstCowNr <- c(lstCowNr, lstCurNr)
+}
+
+dfCowNumber <- as.data.frame(lstCowNr)
+knitr::kable(dfCowNumber)
+```
+
+```{r BoxPlotFunction, echo=FALSE, results='hide'}
+suppressPackageStartupMessages(require(ggplot2))
+ggp2bpGetBoxPlotAtmm <- function(ptdfResult, psMonthNr, ptdfControlMilkYield){
+  ggp2bpResult <- ggplot(ptdfResult, aes(ATMM_KUH_IDX, ATMM_KG_TMM)) + 
+  geom_boxplot(aes(group = cut_width(ATMM_KUH_IDX,1))) + 
+  geom_point(aes(vecTvdNrLifeNrMap,PESKGLAITTOTAL), data = ptdfControlMilkYield, color = "red") + 
+  scale_x_discrete(limits=c(1:nrow(tdfTvdNrCow)))+
+  labs(title = paste0("Tagesmilchmenge im Monat 2017-",psMonthNr),
+       x     = "Kuh-Nummer", 
+       y     = "Tagesmilchmenge (in kg)") + 
+  coord_flip()
+  return(ggp2bpResult)
+}
+```
+
+
+```{r BoxPlotMonth01, echo=FALSE, results='hide', fig.show=TRUE, fig.height=12}
+### # create boxplots
+bpAtmmM01 <- ggp2bpGetBoxPlotAtmm(ptdfResult = tdfResult01, 
+                                  psMonthNr = sMonthNr,
+                                  ptdfControlMilkYield = tdfControlMilkYield)
+bpAtmmM01
+```
+
+```{r BoxPlotMonth02, echo=FALSE, results='hide', fig.show=TRUE, fig.height=12, eval=FALSE}
+### # same for month 2
+sMonthNr <- "02"
+tdfResult02 <- tdfGetTmmPerMonth(ptdfResult = tdfResult,
+                                 psMonth    = sMonthNr,
+                                 ptdfTvdNr  = tdfTvdNrCow)
+bpAtmmM02 <- ggp2bpGetBoxPlotAtmm(ptdfResult = tdfResult02, psMonthNr = sMonthNr)
+bpAtmmM02
+```
+
 
 <!-- ------------------------------------------------------------------------------------ --
   -- END of document:  Below this must not be anything, except the table of abbreviations --
