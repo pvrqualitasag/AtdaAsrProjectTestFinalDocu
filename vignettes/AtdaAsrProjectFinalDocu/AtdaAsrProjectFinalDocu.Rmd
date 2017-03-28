@@ -1,15 +1,18 @@
 ---
 output:
   pdf_document:
+    fig_caption: no
     includes:
       in_header: tex/header.tex
-    fig_caption: false
   word_document: default
 ---
 
 ```{r DocumentSetup, echo=FALSE, results='hide', include=FALSE}
+### # options for output format
+hook_out_fmt <- "pdf"
 ### # specify knitr options
 knitr::opts_chunk$set(echo = FALSE, results = 'asis')
+devtools::load_all()
 ```
 
 ```{r ChunkHooks, results='hide'}
@@ -112,6 +115,9 @@ r6objDocStat$set_current_status(psVersion = "0.0.907",
 r6objDocStat$set_current_status(psVersion = "0.0.908",
                                 psStatus = "Vergleich Tagesmilch mit Milchwägung",  
                                 psProject = "ATDA-ASR")
+r6objDocStat$set_current_status(psVersion = "0.0.909",
+                                psStatus = "Tagesmilch als Boxplots und Milchwägung als Punkte",  
+                                psProject = "ATDA-ASR")
 r6objDocStat$include_doc_stat(psTitle = "# Dokumentenstatus")
 ```
 
@@ -134,8 +140,8 @@ Die hier beschriebene Umsetzung des automatisierten Tierdatenaustauschs basiert 
 ## Testbetrieb
 Das von VSM zur Verfügung gestellte `PlugIn` für die Melkanlagen von Lely wurde per Remote-Zugriff auf einem Testbetrieb in der Schweiz installiert (siehe nachfolgende Grafik). Während der Installation des `PlugIns` verbindet sich dieses mit dem Management-System der Melkanlage. Im Fall von Lely wird dieses System mit `T4C` bezeichnet. Sobald das `PlugIn` von `T4C` erkannt wurde, konnte das `PlugIn` eine Verbindung zur zentralen Datenbank bei VSM aufnehmen und einen ersten Datenaustausch starten. Nach anfänglichen Bereinigungen von fehlenden Tiernummern (basierend auf Nummern der `r r6ob_abbrtable$add_abbrev(psAbbrev = "TVD", psMeaning = "Tierverkehrsdatenbank")`) konnte die routine-mässige Übertragung von Milchmengendaten gestartet werden.
 
-```{r InstallationTestbetrieb, conv.odg=TRUE, odg.graph.cache=TRUE, out.width='0.6\\textwidth', fig.align='center'}
-knitr::include_graphics(path = "InstallationTestbetrieb.pdf")
+```{r InstallationTestbetrieb, conv.odg=TRUE, odg.graph.cache=TRUE, out.format=hook_out_fmt,fig.align='center',fig.width=6}
+knitr::include_graphics(path = paste("InstallationTestbetrieb", hook_out_fmt, sep ="."))
 ```
 
 
@@ -169,14 +175,14 @@ Einzelne konkrete Anfragen an die EMM-Ressource auf dem REST-Server von VSM kön
 
 Der folgende Screenshot zeigt eine Anfrage an die Login-Ressource des REST-Servers. Als Input verlangt die Login-Ressource den Benutzernamen und das Passwort (siehe Pfeil 1). Als Antwort (siehe Pfeil 2) liefert der Server einen Record im sogenannten `r r6ob_abbrtable$add_abbrev(psAbbrev = "JSON", psMeaning = "Java-Script Object Notation")` Format zurück. In der Antwort ist der Authentifizierungsschlüssel enthalten, welchen wir für alle folgenden Anfragen verwenden werden.
 
-```{r LoginResource, conv.odg=TRUE, odg.graph.cache=TRUE, fig.align='center'}
-knitr::include_graphics(path = "LoginResource.pdf")
+```{r LoginResource, conv.odg=TRUE, odg.graph.cache=TRUE, out.format=hook_out_fmt, fig.align='center'}
+knitr::include_graphics(path = paste("LoginResource", hook_out_fmt, sep ="."))
 ```
 
 Zur Übertragung der Milchmengendaten müssen wir eine Anfrage an die EMM-Ressource erstellen. Als Input für die EMM-Anfrage übergeben wir einen JSON-Record mit dem  (1), dem Benutzernamen (2), der BetriebsId (3), dem Start- (4) und dem Enddatum (5). Ein Beispiel für eine EMM-Anfrage ist im nachfolgenden Screenshot gezeigt.
 
-```{r EmmResource, conv.odg=TRUE, odg.graph.cache=TRUE, fig.align='center'}
-knitr::include_graphics(path = "EmmResource.pdf")
+```{r EmmResource, conv.odg=TRUE, odg.graph.cache=TRUE, out.format=hook_out_fmt, fig.align='center'}
+knitr::include_graphics(path = paste("EmmResource", hook_out_fmt, sep ="."))
 ```
 
 Die oben gezeigte EMM-Anfrage fordert die Übertragung aller Milchmengendaten für den Betrieb mit der Id `"CH360830"` für die Zeitspanne zwischen dem 01.01.2017 und dem 30.01.2017 an. 
@@ -185,8 +191,8 @@ Die oben gezeigte EMM-Anfrage fordert die Übertragung aller Milchmengendaten f�
 ### Resultat der EMM-Anfrage
 Als Resultat erhalten wir dann einen ganzen Array von JSON-Records. Ein Ausschnitt der übermittelten Daten ist im folgenden Screenshot gezeigt.
 
-```{r EmmDataResult, conv.odg=TRUE, odg.graph.cache=TRUE, fig.align='center'}
-knitr::include_graphics(path = "EmmDataResult.pdf")
+```{r EmmDataResult, conv.odg=TRUE, odg.graph.cache=TRUE, out.format=hook_out_fmt, fig.align='center'}
+knitr::include_graphics(path = paste("EmmDataResult", hook_out_fmt, sep ="."))
 ```
 
 Ein einzelner JSON-Record besteht aus den Datenkomponenten zwischen zwei geschweiften Klammern `{}`. Jeder einzelne JSON-Record repräsentiert einen Besuch einer Kuh im Roboter. Die Kuh wird mit der `"LifeNumber"`, welche der TVD-Nummer entspricht, identifiziert. Die Besuchsdauer der entsprechenden Kuh kann über die Zeitdifferenz zwischen `"EndMilking"` und `"StartMilking` bestimmt werden. Die letzte Datenkomponente in einem JSON-Record beinhaltet die Milchmenge.
@@ -211,15 +217,15 @@ Sobald alle Tier-Ids bereinigt sind, kann die automatisierte Datenübertragung g
 ## Verarbeitung der übertragenen Daten
 Analog zu anderen Datenimportprozessen werden auch die von VSM erhaltenen Daten in einem zwei-schritt Verfahren importiert. Im einem ersten Schritt werden die Rohdaten, wie sie von VSM her kommen in eine Importtabelle abgelegt. Für die Milchmengendaten heisst diese Tabelle `TI_ATDA_EMM`. Dort werden die übertragenen Daten mit der entsprechenden Betriebsnummer abgelegt. Einige Beispiele für übertragene Datenrecords, wie sie in der Importtabelle `TI_ATDA_EMM` abgelegt werden, sind im folgenden Screenshot gezeigt.
 
-```{r EmmImport, conv.odg=TRUE, odg.graph.cache=TRUE, fig.align='center'}
-knitr::include_graphics(path = "EmmImport.pdf")
+```{r EmmImport, conv.odg=TRUE, odg.graph.cache=TRUE, out.format=hook_out_fmt, fig.align='center'}
+knitr::include_graphics(path = paste("EmmImport", hook_out_fmt, sep ="."))
 ```
 
 
 In einem zweiten Schritt werden die übertragenen Daten verarbeitet. Für die Milchmengendaten können wir die Milchmengen der einzelnen Besuche für jeden Tag aufaddieren und erhalten so für jede Kuh die Tagesmilchmenge. Zu Testzwecken sind die berechneten Tagesmilchmengen in der Tabelle `T_ATDA_TMM` abgelegt. Ein Ausschnitt aus dieser Tabelle ist im folgenden Screenshot gezeigt.
 
-```{r AtdaTmm, conv.odg=TRUE, odg.graph.cache=TRUE, fig.align='center'}
-knitr::include_graphics(path = "AtdaTmm.pdf")
+```{r AtdaTmm, conv.odg=TRUE, odg.graph.cache=TRUE, out.format=hook_out_fmt, fig.align='center'}
+knitr::include_graphics(path = paste("AtdaTmm", hook_out_fmt, sep ="."))
 ```
 
 
@@ -230,7 +236,7 @@ Als repräsentativen Wert der Milchmenge pro Kuh für einen Monat können wir de
 Seit der Installation der Plug-Ins sind gut zwei Monate vergangen. Somit haben wir Tagesmilchmengen von zwei Monaten und zwei konventionelle Milchwägungen zur Verfügung, damit wir einen Vergleich anstellen können.
 
 ### Übertragung der Milchmengendaten
-In einem ersten Schritt werden die Milchmengendaten für die Monate Januar und Februar 2017 übertragen und verarbeitet. Aufgrund der übertragenen Rohdaten wurden für jede Kuh die Tagesmilchmenge berechnet. Die berechneten Tagesmilchmengen werden als Boxplots dargestellt.
+In einem ersten Schritt werden die Milchmengendaten für die Monate Januar und Februar 2017 übertragen und verarbeitet. Aufgrund der übertragenen Rohdaten wurden für jede Kuh die Tagesmilchmenge berechnet. Die berechneten Tagesmilchmengen werden als Boxplots dargestellt und die Milchmengen werden durch gefüllte rote Punkte repräsentiert.
 
 
 ```{r DataTransfer, echo=FALSE, results='hide'}
@@ -245,27 +251,12 @@ if (!file.exists(sAtdaTmmRda)){
 dim(dfResult)
 
 ### # extract all cows from dataframe
-suppressPackageStartupMessages(require(dplyr))
-tdfResult <- tbl_df(dfResult)
-tdfTvdNrCow <- distinct(tdfResult, ATMM_KUH_LIFENR)
+#suppressPackageStartupMessages(require(dplyr))
 
-### # add month to the data frame
-tdfResult <- mutate(tdfResult, ATMM_REC_MONTH = substr(ATMM_REC_DATUM,6,7))
-
-### # function to get TMM per month
-tdfGetTmmPerMonth <- function(ptdfResult, psMonth, ptdfTvdNr){
-  tdfTmmPerMonth <- filter(ptdfResult, ATMM_REC_MONTH == psMonth)
-  ATMM_KUH_IDX <- sapply(tdfTmmPerMonth$ATMM_KUH_LIFENR, 
-                         function(x) which(x == ptdfTvdNr$ATMM_KUH_LIFENR), 
-                         USE.NAMES = FALSE)
-  tdfTmmPerMonth <- cbind(tdfTmmPerMonth, ATMM_KUH_IDX)
-  return(tdfTmmPerMonth)
-}
 ### # extract data for Month 01
 sMonthNr <- "01"
-tdfResult01 <- tdfGetTmmPerMonth(ptdfResult = tdfResult,
-                                 psMonth    = sMonthNr,
-                                 ptdfTvdNr  = tdfTvdNrCow)
+tdfResult01 <- AtdaAsrProjectTestFinalDocu::tdfGetTmmPerMonth(pdfResult = dfResult,
+                                                              psMonth    = sMonthNr)
 
 ### # control milk yield
 sControlMilkYieldRda <- paste0("con_my_2017",sMonthNr, ".rda")
@@ -274,39 +265,22 @@ if (!file.exists(sControlMilkYieldRda)){
 } else {
   load(file = sControlMilkYieldRda)
 }
-### # produce a vector with TVD-Nr w/out Pz and remove spaces and '.'
-vecShortLifeNr <- gsub(" ", "", tdfTvdNrCow$ATMM_KUH_LIFENR, fixed = TRUE)
-vecShortLifeNr <- gsub(".", "", vecShortLifeNr, fixed = TRUE)
-vecLifeNrTvdNrMap <- sapply(vecShortLifeNr, 
-                            function(x) charmatch(x, dfControlMilkYield201701$TVDNR), 
-                            USE.NAMES = FALSE)
-
-vecTvdNrLifeNrMap <- sapply(dfControlMilkYield201701$TVDNR,
-                            function(x) charmatch(substr(x,1,nchar(x)-1), vecShortLifeNr),
-                            USE.NAMES = FALSE)
-### # report which cows have milk yield but not TMM data
-vecNoTmm <- dfControlMilkYield201701$TVDNR[which(is.na(vecTvdNrLifeNrMap))]
-### # bind LifeNrIdx
-dfControlMilkYield201701 <- cbind(dfControlMilkYield201701, vecTvdNrLifeNrMap)
-
-### # compute number of total milk yield
-tdfControlMilkYield <- tbl_df(dfControlMilkYield201701)
-tdfControlMilkYield <- mutate(tdfControlMilkYield, 
-                              PESKGLAITTOTAL = PESKGLAITMATIN + PESKGLAITSOIR)
-
-tdfControlMilkYield <- filter(tdfControlMilkYield, !is.na(vecTvdNrLifeNrMap))
-
+### # get the tbl_df with control milk yields
+tdfControlMilkYield <- AtdaAsrProjectTestFinalDocu::tdfGetControlMilkYield(pdfControlMilkYield = dfControlMilkYield201701,
+                                              pdfResult           = dfResult)
 ```
 
 In der nachfolgenden Grafik werden die TVD-Nummern der Kühe durch fortlaufende Nummern ersetzt. Die folgende Tabelle gibt die Zuordnung zwischen Kuh-Nummern und TVD-Nummern der Kühe.
 
 ```{r CowNumberTable, echo=FALSE, results='asis'}
-nNrRowsPerPage <- 37
-nNrRounds <- floor(nrow(tdfTvdNrCow)/nNrRowsPerPage)
+nNrRowsPerPage <- 36
+vecTmmLifeNr <- vecGetTmmLifeNr(pdfResult = dfResult)
+nNrCowsTmm <- length(vecTmmLifeNr)
+nNrRounds <- floor(nNrCowsTmm/nNrRowsPerPage)
 lstCowNr <- NULL
 for (i in 1:nNrRounds){
   lstCurNr <- list(Knr = as.character(c(((i-1)*nNrRowsPerPage + 1):(i*nNrRowsPerPage))),
-                   Tnr = as.vector(unlist(tdfTvdNrCow))[((i-1)*nNrRowsPerPage + 1):(i*nNrRowsPerPage)])
+                   Tnr = vecTmmLifeNr[((i-1)*nNrRowsPerPage + 1):(i*nNrRowsPerPage)])
   names(lstCurNr) <- sapply(c("Kuhnummer","TVDNummer"), function(x) paste0(x,i))
   if (is.null(lstCowNr)){
     lstCowNr <- lstCurNr
@@ -315,10 +289,10 @@ for (i in 1:nNrRounds){
   }
 }
 ### # add remainder
-if (i*nNrRowsPerPage < nrow(tdfTvdNrCow)){
-  vecEmptyRows <- rep("", (nNrRowsPerPage-nrow(tdfTvdNrCow)+i*nNrRowsPerPage))
-  lstCurNr <- list(Knr = c(as.character(c((i*nNrRowsPerPage + 1):(nrow(tdfTvdNrCow)))),vecEmptyRows),
-                   Tnr = c(as.vector(unlist(tdfTvdNrCow))[(i*nNrRowsPerPage + 1):(nrow(tdfTvdNrCow))],vecEmptyRows))
+if (i*nNrRowsPerPage < nNrCowsTmm){
+  vecEmptyRows <- rep("", (nNrRowsPerPage-nNrCowsTmm+i*nNrRowsPerPage))
+  lstCurNr <- list(Knr = c(as.character(c((i*nNrRowsPerPage + 1):(nNrCowsTmm))), vecEmptyRows),
+                   Tnr = c(vecTmmLifeNr[(i*nNrRowsPerPage + 1):(nNrCowsTmm)], vecEmptyRows))
   names(lstCurNr) <- sapply(c("Kuhnummer","TVDNummer"), function(x) paste0(x,(i+1)))
   lstCowNr <- c(lstCowNr, lstCurNr)
 }
@@ -326,22 +300,6 @@ if (i*nNrRowsPerPage < nrow(tdfTvdNrCow)){
 dfCowNumber <- as.data.frame(lstCowNr)
 knitr::kable(dfCowNumber)
 ```
-
-```{r BoxPlotFunction, echo=FALSE, results='hide'}
-suppressPackageStartupMessages(require(ggplot2))
-ggp2bpGetBoxPlotAtmm <- function(ptdfResult, psMonthNr, ptdfControlMilkYield){
-  ggp2bpResult <- ggplot(ptdfResult, aes(ATMM_KUH_IDX, ATMM_KG_TMM)) + 
-  geom_boxplot(aes(group = cut_width(ATMM_KUH_IDX,1))) + 
-  geom_point(aes(vecTvdNrLifeNrMap,PESKGLAITTOTAL), data = ptdfControlMilkYield, color = "red") + 
-  scale_x_discrete(limits=c(1:nrow(tdfTvdNrCow)))+
-  labs(title = paste0("Tagesmilchmenge im Monat 2017-",psMonthNr),
-       x     = "Kuh-Nummer", 
-       y     = "Tagesmilchmenge (in kg)") + 
-  coord_flip()
-  return(ggp2bpResult)
-}
-```
-
 
 ```{r BoxPlotMonth01, echo=FALSE, results='hide', fig.show=TRUE, fig.height=12}
 ### # create boxplots
@@ -351,15 +309,40 @@ bpAtmmM01 <- ggp2bpGetBoxPlotAtmm(ptdfResult = tdfResult01,
 bpAtmmM01
 ```
 
-```{r BoxPlotMonth02, echo=FALSE, results='hide', fig.show=TRUE, fig.height=12, eval=FALSE}
+```{r BoxPlotMonth02, echo=FALSE, results='hide', fig.show=TRUE, fig.height=12}
 ### # same for month 2
 sMonthNr <- "02"
-tdfResult02 <- tdfGetTmmPerMonth(ptdfResult = tdfResult,
-                                 psMonth    = sMonthNr,
-                                 ptdfTvdNr  = tdfTvdNrCow)
-bpAtmmM02 <- ggp2bpGetBoxPlotAtmm(ptdfResult = tdfResult02, psMonthNr = sMonthNr)
+tdfResult02 <- tdfGetTmmPerMonth(pdfResult = dfResult,
+                                 psMonth   = sMonthNr)
+
+sControlMilkYieldRda <- paste0("con_my_2017",sMonthNr, ".rda")
+if (!file.exists(sControlMilkYieldRda)){
+  stop(" * No control milk yield data found, read it from DB first\n")
+} else {
+  load(file = sControlMilkYieldRda)
+}
+### # get the tbl_df with control milk yields
+tdfControlMilkYield <- tdfGetControlMilkYield(pdfControlMilkYield = dfControlMilkYield201702,
+                                              pdfResult           = dfResult)
+
+bpAtmmM02 <- ggp2bpGetBoxPlotAtmm(ptdfResult = tdfResult02, 
+                                  psMonthNr = sMonthNr,
+                                  ptdfControlMilkYield = tdfControlMilkYield)
 bpAtmmM02
 ```
+
+## Erklärung der Boxplots
+Ein Boxplot ist ein Diagramm, welches zur grafischen Darstellung von Datenverteilungen verwendet wird. Die Bedeutung der Bestandteile des Boxplots werden in der nachfolgenden Grafik erklärt. 
+
+```{r BoxplotMeaning, conv.odg=TRUE, odg.graph.cache=TRUE, out.format=hook_out_fmt, fig.align='center'}
+knitr::include_graphics(path = paste("BoxplotMeaning", hook_out_fmt, sep ="."))
+```
+
+Ein Boxplot besteht aus einem Rechteck (Box) und zwei Linien, welche das Rechteck verlängern. Die Linien heissen "Whisker". Der Strich innerhalb der Box repräsentiert den Median der Datenverteilung. 
+
+Die Breite der Box, welche als `r r6ob_abbrtable$add_abbrev(psAbbrev = "IQR", psMeaning = "Inter-Quartil-Range")` bezeichnet wird, ist so definiert, dass die mittleren 50% der Daten innerhalb der Box liegen. Somit steht die linke Begrenzungsseite der Box am unteren Quartil, d.h. 25% der Daten liegen links ausserhalb der Box. Die rechte Begrenzungsseite der Box steht am oberen Quartil, d.h. 25% der Daten liegen rechts ausserhalb der Box. 
+
+Die oberen und unteren Whiskers reichen bis zum Maximum oder zum Minimum der Daten, vorausgesetzt die Entfernung der Extrema von den Quartilen ist kleiner als $1.5 * IQR$. Sind die Extrema zu weit von den Quartilen entfernt, werden diese als einzelne Punkte (Ausreisser) dargestellt.
 
 
 <!-- ------------------------------------------------------------------------------------ --
@@ -376,6 +359,8 @@ if (!r6ob_abbrtable$is_empty_abbr())
 ```{r AbrTableToDocument}
 r6ob_abbrtable$include_abbr_table(psAbbrTitle = "# Abkürzungen")
 ```
+
+
 
 
 
